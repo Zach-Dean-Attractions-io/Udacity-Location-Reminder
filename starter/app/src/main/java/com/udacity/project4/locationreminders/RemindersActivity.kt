@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -12,6 +13,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
 import com.udacity.project4.authentication.AuthenticationActivity
+import com.udacity.project4.locationreminders.savereminder.SaveReminderFragment
 import kotlinx.android.synthetic.main.activity_reminders.*
 
 /**
@@ -34,4 +36,16 @@ class RemindersActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
+        if(requestCode == SaveReminderFragment.REQUEST_TURN_DEVICE_LOCATION_ON) {
+            if(resultCode == 0) {
+                Toast.makeText(this, "Please turn location settings on manually!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
 }

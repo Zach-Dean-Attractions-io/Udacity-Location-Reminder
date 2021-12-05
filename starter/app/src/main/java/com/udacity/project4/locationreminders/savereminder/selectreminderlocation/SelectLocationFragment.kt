@@ -41,8 +41,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     companion object {
         const val LOCATION_REQUEST = 1000
-        const val FOREGROUND_THEN_BACKGROUND_REQUEST = 1001
-        const val BACKGROUND_LOCATION_REQUEST = 1002
 
         const val TAG = "SelectLocationFragment"
     }
@@ -71,8 +69,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-
-        onLocationSelected()
 
         binding.saveButton.setOnClickListener {
             // Changed to currentMarker Due To Testing
@@ -134,51 +130,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
-    /**
-     * For Android Q and above we need ACCESS_BACKGROUND_LOCATION too. This could be handled elsewhere I guess but will handle it here.
-     */
-    private fun isPermissionGranted(): Boolean {
-        return if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        } else {
-            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    /**
-     * For Android Q we can request ACCESS_BACKGROUND_LOCATION at the same time as ACCESS_COARSE_LOCATION & ACCESS_FINE_LOCATION
-     * For Android R+ we must request ACCESS_BACKGROUND_LOCATION after being granted permission to ACCESS_COARSE_LOCATION & ACCESS_FINE_LOCATION
-     */
-    class PermissionsHelper(val permissions: Array<String>, val requestCode: Int)
-
-    private fun getLocationRequestDetails(): PermissionsHelper {
-        return when {
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q -> {
-                PermissionsHelper(
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    LOCATION_REQUEST
-                )
-            }
-            Build.VERSION.SDK_INT == Build.VERSION_CODES.Q -> {
-                PermissionsHelper(
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                    LOCATION_REQUEST
-                )
-            }
-            else -> {
-                PermissionsHelper (
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    FOREGROUND_THEN_BACKGROUND_REQUEST
-                )
-            }
-        }
-    }
-
-
-    @SuppressLint("MissingPermission") // We do check for the permission! Lint doesn't see it in the function
     private fun enableLocation() {
-        if(isPermissionGranted()) {
+        if(ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 location?.let {
@@ -188,45 +141,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 }
             }
         } else {
-            // Request Location Permissions
-            val requestDetails = getLocationRequestDetails()
-            requestPermissions(
-                requestDetails.permissions,
-                requestDetails.requestCode
-            )
+            // Request Location Permissions - Foreground only request needed here
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_REQUEST)
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        //super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         if(requestCode == LOCATION_REQUEST) {
             // ACCESS_FINE_LOCATION
             if(grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 enableLocation()
-            }
-        } else if(requestCode == FOREGROUND_THEN_BACKGROUND_REQUEST) {
-            // Launch ACCESS_BACKGROUND_REQUEST
-            if(grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(
-                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                    BACKGROUND_LOCATION_REQUEST
-                )
-            }
-        } else if(requestCode == BACKGROUND_LOCATION_REQUEST) {
-            // ACCESS_BACKGROUND_LOCATION
-            if(grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                enableLocation()
+            } else {
+                // Show error message
+                Toast.makeText(requireContext(), "Unable to show current location. Please grant permissions manually", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
-    private fun onLocationSelected() {
-        //        TODO: When the user confirms on the selected location,
-        //         send back the selected location details to the view model
-        //         and navigate back to the previous fragment to save the reminder and add the geofence
-    }
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.map_options, menu)

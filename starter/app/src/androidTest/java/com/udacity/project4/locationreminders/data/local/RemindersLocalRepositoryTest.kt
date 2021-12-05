@@ -77,7 +77,18 @@ class RemindersLocalRepositoryTest {
             assertThat(remindersResult.data.map {reminder -> reminder.id}).contains(reminder3.id)
         }
 
+    }
 
+    @Test
+    fun specifiedIdDoesntExist_ReturnError() = mainCoroutineRule.runBlockingTest {
+        // WHEN - A Reminder is retrieved that doesnt exist
+        val remindersResult = remindersLocalRepository.getReminder("You wont find me")
+
+        assertThat(remindersResult).isInstanceOf(Result.Error::class.java)
+
+        if(remindersResult is Result.Error) {
+            assertThat(remindersResult.message).isEqualTo("Reminder not found!")
+        }
     }
 
 }
