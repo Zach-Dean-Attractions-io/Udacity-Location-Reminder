@@ -37,15 +37,15 @@ class RemindersActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-
-        if(requestCode == SaveReminderFragment.REQUEST_TURN_DEVICE_LOCATION_ON) {
-            if(resultCode == 0) {
-                Toast.makeText(this, "Please turn location settings on manually!", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        super.onActivityResult(requestCode, resultCode, data)
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//
+//        if(requestCode == SaveReminderFragment.REQUEST_TURN_DEVICE_LOCATION_ON) {
+//            if(resultCode == 0) {
+//                Toast.makeText(this, "Please turn location settings on manually!", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//
+//        super.onActivityResult(requestCode, resultCode, data)
+//    }
 
 }

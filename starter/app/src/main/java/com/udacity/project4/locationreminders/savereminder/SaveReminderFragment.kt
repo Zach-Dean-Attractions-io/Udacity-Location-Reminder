@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.material.snackbar.Snackbar
@@ -112,7 +113,8 @@ class SaveReminderFragment : BaseFragment() {
 
                 if(exception is ResolvableApiException) {
                     try {
-                        exception.startResolutionForResult(requireActivity(), REQUEST_TURN_DEVICE_LOCATION_ON)
+                        startIntentSenderForResult(exception.resolution.intentSender, REQUEST_TURN_DEVICE_LOCATION_ON, null, 0, 0, 0, null)
+                        //exception.startResolutionForResult(requireActivity(), REQUEST_TURN_DEVICE_LOCATION_ON)
                     } catch (sendEx: IntentSender.SendIntentException) {
                         Toast.makeText(requireContext(), "Unable to turn device location on. Please enable", Toast.LENGTH_SHORT).show()
                     }
@@ -139,10 +141,14 @@ class SaveReminderFragment : BaseFragment() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Toast.makeText(requireContext(), "ActivityResult", Toast.LENGTH_SHORT).show()
 
         if(requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
-            Log.d("Hi", "Request to turn device on")
+            if(resultCode == -1) {
+                // This seems to be the success
+                saveReminder()
+            } else {
+                Toast.makeText(requireContext(), "Please enable your location manually.", Toast.LENGTH_SHORT).show()
+            }
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
